@@ -15,11 +15,13 @@ def cout(string, typ=FAIL):
     print(typ+string+ENDC)
 
 class Benchmark:
-    def __init__(self, desc='program'):
-        self.desc = desc
+    def __init__(self):
+        self.desc = 'program'
         self.start = time()
 
-    def startlog(self):
+    def startlog(self, desc=''):
+        if desc:
+            self.desc = desc
         self.start = time()
         self.log('Start '+self.desc)
 
@@ -33,8 +35,17 @@ class Benchmark:
         if elapsed:
             cout("Elapsed time: " + str(elapsed))
 
-b = Benchmark('candidate selection')
-g = Generator('data/smalldict', 2)
+
+b = Benchmark('prog')
 b.startlog()
-print(g.candidates('porridge'))
+g = Generator('data/smalldict', 3)
+b.endlog()
+b.startlog()
+for i in range(1000):
+    (g.candidates('good boy'))
+    (g.candidates('acomodation'))
+    (g.candidates('adpter'))
+    (g.candidates('botle'))
+    (g.candidates('mic'))
+    (g.candidates('pomegrant'))
 b.endlog()

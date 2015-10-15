@@ -1,5 +1,8 @@
 __pycache__
+archive
 bin
 data
 *.o
+*.c
+*.so
 ~*
