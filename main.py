@@ -1,6 +1,9 @@
+from distance import MinEdit, MaxPr, ConfusionMatrix
 from generator import *
 from time import time
 from datetime import timedelta
+import re
+
 
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
@@ -36,16 +39,21 @@ class Benchmark:
             cout("Elapsed time: " + str(elapsed))
 
 
-b = Benchmark('prog')
-b.startlog()
-g = Generator('data/smalldict', 3)
+b = Benchmark()
+b.startlog('load')
+g = Generator('data/smalldict', 2)
+c = ConfusionMatrix('data/mistake')
 b.endlog()
-b.startlog()
-for i in range(1000):
-    (g.candidates('good boy'))
-    (g.candidates('acomodation'))
-    (g.candidates('adpter'))
-    (g.candidates('botle'))
-    (g.candidates('mic'))
-    (g.candidates('pomegrant'))
+b.startlog('correction')
+
+with open('data/mistake-text', 'r') as f:
+    lines = [re.sub('[!.?",\'()]', '', x) for x in f.readlines()]
+    words = [y for x in lines for y in x.split()]
+# words = ['ou', 'goode', 'pencilz', 'good boy', 'acomodation', 'pomegrant', 'kdsjalfsad']
+for word in words:
+    candidates = g.candidates(word)
+    if len(candidates) > 1:
+        candidates = [(MaxPr(word, x, c).value(log=True), x) for x in candidates]
+        likely = max(candidates)[1]
+        print(word, ' | ', likely)
 b.endlog()
