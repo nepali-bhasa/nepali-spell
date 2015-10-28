@@ -8,7 +8,9 @@ class Generator:
     # Used to distinguish between correct and misspelled words
     # This helps avoid create another dictionary for correct words
     # _suffix is a random string that is unlikely to occur at end of word
-    _suffix = '@&%$'
+    _correct_suffix = '?c'
+    # _suffix_suffix = '?s'
+    # _prefix_suffix = '?p'
 
     # Return all the words in edit distance n (only delete)
     def _delete(self, myword, n):
@@ -38,7 +40,7 @@ class Generator:
             for word in dictionarydb:
                 # Interleave correct word and misspelled words in
                 # candidate word dictionary
-                candidatedb[word+self._suffix] = True
+                candidatedb[word+self._correct_suffix] = True
                 for error in self._delete(word, self._distance):
                     candidatedb[error].append(word)
 
@@ -60,9 +62,24 @@ class Generator:
         distance = self._distance
         candidates = {}
         # If word is correct word, don't generate candidates
-        if word+self._suffix not in candidatedb:
+        if word+self._correct_suffix not in candidatedb:
             # Else return candidate words such that their misspelling are near
             candidates = {x for error in delete(word, distance) if error in candidatedb
                     for x in candidatedb[error]}
         # if there are no candidates, then return the word itself
         return list(candidates) or [word]
+
+
+# TODO
+# wrong word : candidate words (choose one with maximum probability)
+# correct word : candidate words (choose one with lowest edit distance)
+# correct suffix : None
+# similar_phonics = {
+#     'ई':'इ',
+#     'ऊ':'उ',
+#     'श':'स',
+#     'ष':'स',
+#     'व':'ब',
+#     'ी':'ि',
+#     'ू':'ु'
+# }
