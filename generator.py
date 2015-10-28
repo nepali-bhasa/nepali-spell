@@ -3,15 +3,10 @@ from collections import defaultdict
 import pickle
 import shelve
 import os
+from helper import Mreplace, Mmatch
+
 
 class Generator:
-    # Used to distinguish between correct and misspelled words
-    # This helps avoid create another dictionary for correct words
-    # _suffix is a random string that is unlikely to occur at end of word
-    _correct_suffix = '?c'
-    # _suffix_suffix = '?s'
-    # _prefix_suffix = '?p'
-
     # Return all the words in edit distance n (only delete)
     def _delete(self, myword, n):
         values = [myword]
@@ -30,24 +25,27 @@ class Generator:
     def _initcandidatefile(self):
         if not os.path.isfile(self._candidatefile):
             print("Generating Candidatefile.")
-
-            # NOTE: This should be after if
             with open(self._wordfile, 'r') as db:
                 dictionarydb = {x.strip() for x in db.readlines()}
 
             # TODO: This consumes a lot of memory, try updating shelve itself
             candidatedb = defaultdict(list)
             for word in dictionarydb:
+                nword = normalize(word)
                 # Interleave correct word and misspelled words in
                 # candidate word dictionary
-                candidatedb[word+self._correct_suffix] = True
-                for error in self._delete(word, self._distance):
+                if word not in candidatedb[nword+_suffix['correct']]:
+                    candidatedb[nword+_suffix['correct']].append(word)
+                # NOTE: Don't add the correct word (nword) as it is already added
+                for error in self._delete(nword, self._distance)-{nword}:
                     candidatedb[error].append(word)
 
             # Write the resulting dictionary in shelve for persistance
             self._candidatedb = shelve.open(self._candidatefile, flag='c',
                                             protocol=pickle.HIGHEST_PROTOCOL)
             for (x, y) in candidatedb.items():
+                # if _suffix['correct'] in x and len(y) > 1:
+                #     print(x, y)
                 self._candidatedb[x] = y
             self._candidatedb.close()
 
@@ -57,29 +55,45 @@ class Generator:
                                         protocol=pickle.HIGHEST_PROTOCOL)
 
     def candidates(self, word):
+        nword = normalize(word)
         delete = self._delete
         candidatedb = self._candidatedb
         distance = self._distance
         candidates = {}
         # If word is correct word, don't generate candidates
-        if word+self._correct_suffix not in candidatedb:
-            # Else return candidate words such that their misspelling are near
-            candidates = {x for error in delete(word, distance) if error in candidatedb
+        # else return candidate words such that their misspelling are near
+        if nword+_suffix['correct'] not in candidatedb:
+            candidates = {x for error in delete(nword, distance) if error in candidatedb
                     for x in candidatedb[error]}
+        else:
+            candidates = candidatedb[nword+_suffix['correct']]
         # if there are no candidates, then return the word itself
         return list(candidates) or [word]
 
 
-# TODO
-# wrong word : candidate words (choose one with maximum probability)
-# correct word : candidate words (choose one with lowest edit distance)
-# correct suffix : None
-# similar_phonics = {
-#     'ई':'इ',
-#     'ऊ':'उ',
-#     'श':'स',
-#     'ष':'स',
-#     'व':'ब',
-#     'ी':'ि',
-#     'ू':'ु'
-# }
+# Dictionary of arbitrary string that is unlikely to occur at end of word,
+# used to distinguish type of key (correct, misspelled, prefix, suffix)
+# This helps avoid create another dictionary for correct words
+_suffix = {
+    'correct' : '?c', # correct_word : list of correct words
+    # 'incorrect' : '', # incorrect_word : list of candidate words
+    # 'prefix': '?p',
+    # 'suffix': '?s',
+}
+
+# Dictionary of characters that have similar phonics, normalized words
+# will have zero edit distance if they differ in only _phonics
+_phonics = {
+     'ई':'इ',
+     'ऊ':'उ',
+     'श':'स',
+     'ष':'स',
+     'व':'ब',
+     'ी':'ि',
+     'ू':'ु'
+}
+_replacer = Mreplace(_phonics)
+
+# Normalize word (
+def normalize(word):
+    return _replacer.replace(word)
