@@ -1,12 +1,22 @@
 # cython: language_level=3
+from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 import pickle
 import shelve
 import os
-from helper import Mreplace, Mmatch
+import ntokenizer
 
+# Dictionary of arbitrary string that is unlikely to occur at end of word,
+# used to distinguish type of key (correct, misspelled, prefix, suffix)
+# This helps avoid create another dictionary for correct words
+_suffix = {
+    'correct' : '?c', # correct_word : list of correct words
+    # 'incorrect' : '', # incorrect_word : list of candidate words
+    # 'prefix': '?p',
+    # 'suffix': '?s',
+}
 
-class Generator:
+class Generator(metaclass=ABCMeta):
     # Return all the words in edit distance n (only delete)
     def _delete(self, myword, n):
         values = [myword]
@@ -19,7 +29,7 @@ class Generator:
     def __init__(self, wordfile, distance=2):
         self._distance = distance
         self._wordfile = wordfile
-        self._candidatefile = wordfile+'.candidate'
+        self._candidatefile = wordfile+'.shelve'
         self._initcandidatefile()
 
     def _initcandidatefile(self):
@@ -31,7 +41,7 @@ class Generator:
             # TODO: This consumes a lot of memory, try updating shelve itself
             candidatedb = defaultdict(list)
             for word in dictionarydb:
-                nword = normalize(word)
+                nword = self._normalize(word)
                 # Interleave correct word and misspelled words in
                 # candidate word dictionary
                 if word not in candidatedb[nword+_suffix['correct']]:
@@ -55,7 +65,7 @@ class Generator:
                                         protocol=pickle.HIGHEST_PROTOCOL)
 
     def candidates(self, word):
-        nword = normalize(word)
+        nword = self._normalize(word)
         delete = self._delete
         candidatedb = self._candidatedb
         distance = self._distance
@@ -70,30 +80,14 @@ class Generator:
         # if there are no candidates, then return the word itself
         return list(candidates) or [word]
 
+    @abstractmethod
+    def _normalize(self, word):
+        pass
 
-# Dictionary of arbitrary string that is unlikely to occur at end of word,
-# used to distinguish type of key (correct, misspelled, prefix, suffix)
-# This helps avoid create another dictionary for correct words
-_suffix = {
-    'correct' : '?c', # correct_word : list of correct words
-    # 'incorrect' : '', # incorrect_word : list of candidate words
-    # 'prefix': '?p',
-    # 'suffix': '?s',
-}
+class GeneratorE(Generator):
+    def _normalize(self, word):
+        return word.lower()
 
-# Dictionary of characters that have similar phonics, normalized words
-# will have zero edit distance if they differ in only _phonics
-_phonics = {
-     'ई':'इ',
-     'ऊ':'उ',
-     'श':'स',
-     'ष':'स',
-     'व':'ब',
-     'ी':'ि',
-     'ू':'ु'
-}
-_replacer = Mreplace(_phonics)
-
-# Normalize word (
-def normalize(word):
-    return _replacer.replace(word)
+class GeneratorN(Generator):
+    def _normalize(self, word):
+        return ntokenizer.normalize(word)

@@ -1,3 +1,4 @@
+# cython: language_level=3
 import os
 import pickle
 import re
@@ -167,8 +168,8 @@ class ConfusionMatrix:
 
     def __init__(self, fname):
         self._error_words_fname = fname
-        self._chars_count_fname = fname + '.ccount'
-        self._chars_total_fname = fname + '.ctotal'
+        self._pxy_fname = fname + '.pxy'
+        self._px_fname = fname + '.px'
 
         # Count of correct char(s), Count of correct char(s) as
         # incorrect char(s), Count of total correct char(s)
@@ -176,8 +177,8 @@ class ConfusionMatrix:
         self.px = {}
         self.total = 0
 
-        if (not os.path.isfile(self._chars_count_fname)
-                or not os.path.isfile(self._chars_total_fname)):
+        if (not os.path.isfile(self._pxy_fname)
+                or not os.path.isfile(self._px_fname)):
             print("Generating ConfusionMatrix.")
             self.pxy, self.px = self._generate()
         else:
@@ -186,15 +187,15 @@ class ConfusionMatrix:
         self.total = sum(self.pxy.values())
 
     def _load(self):
-        with open(self._chars_count_fname, 'rb') as f:
-            chars_count = pickle.load(f)
-        with open(self._chars_total_fname, 'rb') as f:
-            chars_total = pickle.load(f)
-        return chars_count, chars_total
+        with open(self._pxy_fname, 'rb') as f:
+            pxy = pickle.load(f)
+        with open(self._px_fname, 'rb') as f:
+            px = pickle.load(f)
+        return pxy, px
 
     def _generate(self):
         # Create directory if it doesn't exist
-        chars_count = defaultdict(int)
+        pxy = defaultdict(int)
         words_count = defaultdict(int)
         # Get all lines
         with open(self._error_words_fname, 'r') as f:
@@ -211,26 +212,25 @@ class ConfusionMatrix:
                     continue
                 # Get mistake actions and their count
                 for diff in edit.difference():
-                    # TODO split correct here
-                    chars_count[diff] += value
+                    pxy[diff] += value
                 # Get one edit distance mistakes and their count
                 words_count[correct] += value
 
         # Get total count of chars in correct words in _error_words file.
-        chars_total = defaultdict(int)
-        for key in chars_count.keys():
+        px = defaultdict(int)
+        for key in pxy.keys():
             correct = key[0]
             for word, val in words_count.items():
-                chars_total[correct] += len(re.findall(correct, word))*val
+                px[correct] += len(re.findall(correct, word))*val
 
         # Write to files
-        with open(self._chars_count_fname, 'wb') as f:
-            pickle.dump(chars_count, f)
-        with open(self._chars_total_fname, 'wb') as f:
-            pickle.dump(chars_total, f)
+        with open(self._pxy_fname, 'wb') as f:
+            pickle.dump(pxy, f)
+        with open(self._px_fname, 'wb') as f:
+            pickle.dump(px, f)
 
         # Return tuple value
-        return chars_count, chars_total
+        return pxy, px
 
 
 class MaxPr(EditDistance):

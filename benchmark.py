@@ -1,3 +1,4 @@
+# cython: language_level=3
 from time import time
 from datetime import timedelta
 
@@ -10,7 +11,7 @@ ENDC = '\033[0m'
 BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 
-def cout(string, typ=FAIL):
+def _cout(string, typ=FAIL):
     print(typ+string+ENDC)
 
 class Benchmark:
@@ -30,6 +31,6 @@ class Benchmark:
         self.log('End '+self.desc, elapsed)
 
     def log(self, s, elapsed=None):
-        cout(s, OKGREEN)
+        _cout(s, OKGREEN)
         if elapsed:
-            cout("Elapsed time: " + str(elapsed))
+            _cout("Elapsed time: " + str(elapsed))
