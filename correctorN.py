@@ -20,7 +20,7 @@ for word in words:
         minedit = min(candidates)[0]
         likely = [word for edit,word in candidates if edit == minedit]
         # TODO choose the one which has least edit distance when not-normalized
-        print(word,'|', likely, minedit)
+        print(word,'|', ' '.join(likely), minedit)
     else:
         print(word,'|' ,candidates[0], 0)
 b.endlog()
