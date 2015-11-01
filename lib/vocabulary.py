@@ -4,7 +4,7 @@ from collections import defaultdict
 import pickle
 import shelve
 import os
-import ntokenizer
+from lib.misc import normalize
 
 # Dictionary of arbitrary string that is unlikely to occur at end of word,
 # used to distinguish type of key (correct, misspelled, prefix, suffix)
@@ -16,7 +16,7 @@ _suffix = {
     # 'suffix': '?s',
 }
 
-class Generator(metaclass=ABCMeta):
+class Vocabulary(metaclass=ABCMeta):
     # Return all the words in edit distance n (only delete)
     def _delete(self, myword, n):
         values = [myword]
@@ -25,16 +25,16 @@ class Generator(metaclass=ABCMeta):
                            for x in range(len(word))])
         return set(values)
 
-    # Initialize Generator
+    # Initialize Vocabulary
     def __init__(self, wordfile, distance=2):
         self._distance = distance
         self._wordfile = wordfile
-        self._candidatefile = wordfile+'.shelve'
-        self._initcandidatefile()
+        self._vocabulary_file = wordfile+'.shelve'
+        self._init_vocabulary_file()
 
-    def _initcandidatefile(self):
-        if not os.path.isfile(self._candidatefile):
-            print("Generating Candidatefile.")
+    def _init_vocabulary_file(self):
+        if not os.path.isfile(self._vocabulary_file):
+            print("Generating vocabulary_file.")
             with open(self._wordfile, 'r') as db:
                 dictionarydb = {x.strip() for x in db.readlines()}
 
@@ -51,7 +51,7 @@ class Generator(metaclass=ABCMeta):
                     candidatedb[error].append(word)
 
             # Write the resulting dictionary in shelve for persistance
-            self._candidatedb = shelve.open(self._candidatefile, flag='c',
+            self._candidatedb = shelve.open(self._vocabulary_file, flag='c',
                                             protocol=pickle.HIGHEST_PROTOCOL)
             for (x, y) in candidatedb.items():
                 # if _suffix['correct'] in x and len(y) > 1:
@@ -59,9 +59,9 @@ class Generator(metaclass=ABCMeta):
                 self._candidatedb[x] = y
             self._candidatedb.close()
 
-        print("Loading Candidatefile.")
+        print("Loading vocabulary_file.")
         # Load the dictionary from shelve
-        self._candidatedb = shelve.open(self._candidatefile, flag='r',
+        self._candidatedb = shelve.open(self._vocabulary_file, flag='r',
                                         protocol=pickle.HIGHEST_PROTOCOL)
 
     def candidates(self, word):
@@ -80,14 +80,18 @@ class Generator(metaclass=ABCMeta):
         # if there are no candidates, then return the word itself
         return list(candidates) or [word]
 
+    # TODO handle adding of new words in vocabulary
+    def add(self, word):
+        pass
+
     @abstractmethod
     def _normalize(self, word):
         pass
 
-class GeneratorE(Generator):
+class VocabularyE(Vocabulary):
     def _normalize(self, word):
         return word.lower()
 
-class GeneratorN(Generator):
+class VocabularyN(Vocabulary):
     def _normalize(self, word):
-        return ntokenizer.normalize(word)
+        return normalize(word)

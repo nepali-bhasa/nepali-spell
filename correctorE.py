@@ -1,12 +1,10 @@
-from distance import MinEdit, MaxPr, ConfusionMatrix
-from generator import GeneratorE
-from benchmark import Benchmark
+from lib import *
 import re
 
 
 b = Benchmark()
 b.startlog('load')
-g = GeneratorE('data/eng/vocabulary', 2)
+g = VocabularyE('data/eng/vocabulary', 2)
 c = ConfusionMatrix('data/eng/mistake')
 b.endlog()
 

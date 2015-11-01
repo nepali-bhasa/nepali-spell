@@ -1,8 +1,7 @@
 from distutils.core import setup
 from Cython.Build import cythonize
 
-lib = ["generator.py", "benchmark.py", "distance.py",
-        "multiplere.py", "ntokenizer.py"]
+lib = ["lib/*.py"]
 
 setup(
   name = 'spellchecker',

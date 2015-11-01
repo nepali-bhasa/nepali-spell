@@ -1,8 +1,10 @@
 __pycache__
-archive
+tmp
 bin
-data
 *.o
 *.c
 *.so
 ~*
+
+*.pickle
+*.shelve

@@ -168,8 +168,8 @@ class ConfusionMatrix:
 
     def __init__(self, fname):
         self._error_words_fname = fname
-        self._pxy_fname = fname + '.pxy'
-        self._px_fname = fname + '.px'
+        self._pxy_fname = fname + '.pxy.pickle'
+        self._px_fname = fname + '.px.pickle'
 
         # Count of correct char(s), Count of correct char(s) as
         # incorrect char(s), Count of total correct char(s)
