@@ -37,6 +37,10 @@ class Vocabulary(metaclass=ABCMeta):
             print("Generating vocabulary_file.")
             with open(self._wordfile, 'r') as db:
                 dictionarydb = {x.strip() for x in db.readlines()}
+            # Optionally read for '+' file
+            if os.path.isfile(self._wordfile+'+'):
+                with open(self._wordfile+'+', 'r') as db:
+                    dictionarydb |= {x.strip() for x in db.readlines()}
 
             # TODO: This consumes a lot of memory, try updating shelve itself
             candidatedb = defaultdict(list)
@@ -64,6 +68,19 @@ class Vocabulary(metaclass=ABCMeta):
         self._candidatedb = shelve.open(self._vocabulary_file, flag='r',
                                         protocol=pickle.HIGHEST_PROTOCOL)
 
+    # For 'in'
+    def __contains__(self, word):
+        # return word+_suffix['correct'] in self._candidatedb
+        # return self._normalize(word)+_suffix['correct'] in self._candidatedb
+
+        # First find key then find word in list of candidates
+        # NOTE: list will be okay because there are few candidates
+        key = self._normalize(word)+_suffix['correct']
+        if key in self._candidatedb:
+            if word in self._candidatedb[key]:
+                return True
+        return False
+
     def candidates(self, word):
         nword = self._normalize(word)
         delete = self._delete
@@ -72,11 +89,11 @@ class Vocabulary(metaclass=ABCMeta):
         candidates = {}
         # If word is correct word, don't generate candidates
         # else return candidate words such that their misspelling are near
-        if nword+_suffix['correct'] not in candidatedb:
+        if not nword+_suffix['correct'] in self._candidatedb:
             candidates = {x for error in delete(nword, distance) if error in candidatedb
                     for x in candidatedb[error]}
         else:
-            candidates = candidatedb[nword+_suffix['correct']]
+            candidates = self._candidatedb[nword+_suffix['correct']]
         # if there are no candidates, then return the word itself
         return list(candidates) or [word]
 

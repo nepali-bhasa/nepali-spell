@@ -16,9 +16,10 @@ Run the application with:
 
 
 ##Todo
-- [x] Extract vocabulary from corpus
-- [x] Stemming and Segmentation of words
-- [x] Create Confusion matrix from corpus
+- [x] Calculate EditDistance and generate Candidates
+- [ ] Extract vocabulary from corpus
+- [ ] Stemming and Segmentation of words
+- [ ] Create Confusion matrix from corpus
 
 ##License
 It is distributed under [GNU GPL][1]. A copy of the license is available in the distributed LICENSE file.

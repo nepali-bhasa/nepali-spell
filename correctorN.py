@@ -11,6 +11,7 @@ with open('data/nep/sampletextD', 'r') as f:
     words = tokenize(content)
 
 for word in words:
+
     if not valid(word):
         print(word)
         continue
@@ -23,4 +24,5 @@ for word in words:
         print(word,'|', ' '.join(likely), minedit)
     else:
         print(word,'|' ,candidates[0], 0)
+
 b.endlog()
