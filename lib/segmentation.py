@@ -1,10 +1,4 @@
-# TODO
-# 1. Put cutoff, (a word is not infinitely long), get from dictionary model (+2
-# of longest word
-# 2. *Correction (connect, disconnect correct words) using probability model
-# FIXME
-# 1. When one of front or back is '' then it will remain that way unless
-#   both of them are '', so no calculation should be required
+# cython: language_level=3
 
 def isWrong(word):
     return word[-1] == '*'
@@ -14,6 +8,9 @@ def markWrong(word):
 
 def unmarkWrong(word):
     return word[:-1]
+
+def magnitude(x, y):
+    return len(x)**2 + len(y)**2
 
 def segment(word, dictionary):
     if not word:
@@ -28,34 +25,44 @@ def segment(word, dictionary):
     of = 0
     ob = lw-1
 
+    # Lookup in dictionary is expensive if it is loaded from disk,
+    # so, when back='' or front='' it won't change until an offset
+    # thats why no need to recalculate it in next iteration
+    # 'xxx' because it needs to run for the first time and after offset change
+    lastback = 'xxx'
+    lastfront = 'xxx'
     while True:
         # 'front' is longest word from front in text
         # which is also in dictionary
         front = ''
-        i = 0
-        while i < lw:
-            # Fix traversal
-            while i+1<lw and word[i+1] in dependent:
+        if lastfront:
+            i = 0
+            while i < lw:
+                # Fix traversal
+                while i+1<lw and word[i+1] in dependent:
+                    i += 1
+                # Replace older shorter word with longer one if it exits in dict
+                if word[of:i+1] in dictionary:
+                    front = word[of:i+1]
+                # Traversal
                 i += 1
-            # Replace older shorter word with longer one if it exits in dict
-            if word[of:i+1] in dictionary:
-                front = word[of:i+1]
-            # Traversal
-            i += 1
+            lastfront = front
 
         # 'back' is longest word from back in text
         # which is also in dictionary
         back = ''
-        j = lw-1
-        while j > -1:
-            # Fix traversal
-            while word[j] in dependent:
+        if lastback:
+            j = lw-1
+            while j > -1:
+                # Fix traversal
+                while word[j] in dependent:
+                    j -= 1
+                # Replace older shorter word with longer one if it exits in dict
+                if word[j:ob+1] in dictionary:
+                    back = word[j:ob+1]
+                # Traversal
                 j -= 1
-            # Replace older shorter word with longer one if it exits in dict
-            if word[j:ob+1] in dictionary:
-                back = word[j:ob+1]
-            # Traversal
-            j -= 1
+            lastback = back
 
         # Try using an offset if no match is found from front and back
         if not front and not back:
@@ -71,6 +78,8 @@ def segment(word, dictionary):
             if of > lw or ob < 0:
                 return [markWrong(word)]
             # Don't go down
+            lastback = 'xxx'
+            lastfront = 'xxx'
             continue
 
         lf = len(front)
@@ -78,26 +87,39 @@ def segment(word, dictionary):
         offsetfront = markWrong(word[:of])
         offsetback = markWrong(word[ob+1:])
         output = []
-        if lf+lb <= ob-of+1:
-            output = ([offsetfront] +
-                      [front] +
-                      segment(word[of+lf:ob-lb+1], dictionary) +
-                      [back] +
-                      [offsetback])
-        elif lf >= lb:
-            output = ([offsetfront] +
-                      [front] +
-                      segment(word[of+lf:], dictionary))
-        else:
-            output = (segment(word[:ob-lb+1], dictionary) +
-                      [back] +
-                      [offsetback])
 
+        if lf+lb <= ob-of+1:
+            mremain = word[of+lf:ob-lb+1]
+            output = [front] + segment(mremain, dictionary) + [back]
+        else:
+            fremain = word[of:ob-lb+1]
+            bremain = word[of+lf:ob+1]
+            fremaincorrect = fremain in dictionary
+            bremaincorrect = bremain in dictionary
+
+            if fremaincorrect and bremaincorrect:
+                # XXX magnitude is arbitrary function
+                if magnitude(front, bremain) < magnitude(fremain, back):
+                    output = [front , bremain]
+                else:
+                    output = [fremain, back]
+            elif fremaincorrect:
+                output = [fremain, back]
+            elif bremaincorrect:
+                output = [front, bremain]
+            else:
+                if lf >= lb:
+                    output = [front] + segment(bremain)
+                else:
+                    output = segment(fremain) + [back]
+
+        output = [offsetfront] + output + [offsetback]
         # Used connect here so that smaller groups are connected first
         return connect([x for x in output if x])
 
 
 def connect(wordlist, joinwhen=3):
+    # XXX: joinwhen = 3
     output = []
 
     for i in range(len(wordlist)):
@@ -106,7 +128,6 @@ def connect(wordlist, joinwhen=3):
         # 'eml' is the element to add to list
         eml = wordlist[i]
 
-        # Len connect only to 
         if stk and isWrong(stk) and isWrong(eml):
             output[-1] = markWrong(unmarkWrong(stk)+unmarkWrong(eml))
         elif stk and isWrong(stk) and (len(eml) < joinwhen or
@@ -135,5 +156,10 @@ dependent = {
             'ो',
             'ौ',
             '्',
+           '‍',
             }
 
+
+# TODO
+# 1. Put cutoff, (a word is not infinitely long),
+# get from dictionary model (+2 of longest word)

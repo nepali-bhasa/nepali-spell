@@ -71,15 +71,16 @@ class Vocabulary(metaclass=ABCMeta):
     # For 'in'
     def __contains__(self, word):
         # return word+_suffix['correct'] in self._candidatedb
-        # return self._normalize(word)+_suffix['correct'] in self._candidatedb
+        return self._normalize(word)+_suffix['correct'] in self._candidatedb
 
         # First find key then find word in list of candidates
         # NOTE: list will be okay because there are few candidates
-        key = self._normalize(word)+_suffix['correct']
+        '''key = self._normalize(word)+_suffix['correct']
         if key in self._candidatedb:
             if word in self._candidatedb[key]:
                 return True
         return False
+        '''
 
     def candidates(self, word):
         nword = self._normalize(word)
@@ -95,7 +96,7 @@ class Vocabulary(metaclass=ABCMeta):
         else:
             candidates = self._candidatedb[nword+_suffix['correct']]
         # if there are no candidates, then return the word itself
-        return list(candidates) or [word]
+        return list(candidates) or [word+'*']
 
     # TODO handle adding of new words in vocabulary
     def add(self, word):

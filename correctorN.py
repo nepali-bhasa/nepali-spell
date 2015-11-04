@@ -5,8 +5,28 @@ b.startlog('load')
 g = VocabularyN('data/nep/vocabularyD', 2)
 b.endlog()
 
+def trimlist(lst, l = 5):
+    if len(lst) > 5:
+        lst = lst[:5] + ['...']
+    return lst
+
+def getCorrect(word):
+    candidates = g.candidates(word)
+    if len(candidates) > 1:
+        candidates = [(MinEdit(normalize(word), normalize(x)).value(), x) for x in candidates]
+        minedit = min(candidates)[0]
+        likely = [word for edit,word in candidates if edit == minedit]
+    else:
+        likely = [candidates[0]]
+        minedit = MinEdit(normalize(word), normalize(candidates[0])).value()
+    return(likely, minedit)
+    print(word,'|', ' '.join(likely), minedit)
+
 b.startlog('correction')
-with open('data/nep/sampletextD', 'r') as f:
+# with open('data/nep/sample-text', 'r') as f:
+# with open('data/nep/sampletextC', 'r') as f:
+# with open('data/nep/sampletextD', 'r') as f:
+with open('data/nep/sample-segmentation', 'r') as f:
     content = f.read()
     words = tokenize(content)
 
@@ -15,14 +35,33 @@ for word in words:
     if not valid(word):
         print(word)
         continue
-    candidates = g.candidates(word)
-    if len(candidates) > 1:
-        candidates = [(MinEdit(normalize(word), normalize(x)).value(), x) for x in candidates]
-        minedit = min(candidates)[0]
-        likely = [word for edit,word in candidates if edit == minedit]
-        # TODO choose the one which has least edit distance when not-normalized
-        print(word,'|', ' '.join(likely), minedit)
-    else:
-        print(word,'|' ,candidates[0], 0)
+
+    # Direct Approach
+    likely, minedit = getCorrect(word)
+    if not isWrong(likely[0]):
+        print(word, ':', ', '.join(trimlist(likely)),minedit)
+
+    # Segmented Approach
+    if isWrong(likely[0]) or minedit > 1:
+        # XXX: minedit > 1
+        # likely[0] is a hack, always wrong words have 1 likely element
+        for w in segment(word, g):
+            if isWrong(w):
+                w = unmarkWrong(w)
+                print(' '*6+'#', end='')
+            likely, minedit = getCorrect(w)
+
+            print('\t', w, ':', ', '.join(trimlist(likely)),minedit)
+    print()
 
 b.endlog()
+
+# TODO
+# Select best between direct and segmented approach (sum of edits*)
+# Can't handle valid-invalid-valid pattern if done so
+
+# XXX: Problems
+# Problem with too much segments बिवापछि , try correction along with segmentation
+# Problem with too few segments, होम
+# Problem with verbs राख्छु
+# Problem with words not in dictionary

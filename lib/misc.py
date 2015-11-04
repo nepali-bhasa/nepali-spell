@@ -19,7 +19,7 @@ class Mmatch:
 
 
 _matches = {
-    '.*[{}(),/\\"\';+=_*&^$#@!~`|\[\]]+.*',
+    '.*[?{}(),/\\"\';+=_*&^$#@!~`|\[\]]+.*',
     '.*[a-zA-Z0-9]+.*',
     '[-+]?[०-९]+(\.[०-९]+)?'
 }
@@ -95,12 +95,16 @@ _phonics = {
      'ष':'स',
      'व':'ब',
 
-     'र्‍':'र्', # Contains a non-joiner
-    # TODO use regex to match
-     # 'ं'
+     '‍':'', # Contains a non-joiner
 }
 _normalizer = Mreplace(_phonics)
 
 # Normalize word (
 def normalize(word):
     return _normalizer.replace(word)
+
+
+# TODO use regex to match
+# 'ं'
+# fix tokenizer and valid such that tokenizer will split all the
+# non-valid words
