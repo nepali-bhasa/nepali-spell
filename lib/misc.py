@@ -1,6 +1,12 @@
 # cython: language_level=3
 import re
 
+# TODO
+# Use regex to match 'ं'
+
+# FIXME
+# Fix tokenizer to split the non-valid words
+
 class Mreplace:
     def __init__(self, mydict):
         self._mydict = mydict
@@ -102,9 +108,3 @@ _normalizer = Mreplace(_phonics)
 # Normalize word (
 def normalize(word):
     return _normalizer.replace(word)
-
-
-# TODO use regex to match
-# 'ं'
-# fix tokenizer and valid such that tokenizer will split all the
-# non-valid words

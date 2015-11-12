@@ -1,5 +1,15 @@
 from lib import *
 
+# TODO
+# Select best between direct and segmented approach (sum of edits*)
+# Merge (segmentation + correction)
+
+# FIXME
+# Problem with too much segments बिवापछि , try correction along with segmentation
+# Problem with too few segments, होम
+# Problem with verbs राख्छु
+# Problem with words not in dictionary
+
 b = Benchmark()
 b.startlog('load')
 g = VocabularyN('data/nep/vocabularyD', 2)
@@ -22,11 +32,13 @@ def getCorrect(word):
     return(likely, minedit)
     print(word,'|', ' '.join(likely), minedit)
 
+
 b.startlog('correction')
 # with open('data/nep/sample-text', 'r') as f:
 # with open('data/nep/sampletextC', 'r') as f:
 # with open('data/nep/sampletextD', 'r') as f:
-with open('data/nep/sample-segmentation', 'r') as f:
+# with open('data/nep/sample-segmentation', 'r') as f:
+with open('data/nep/vocabularyC', 'r') as f:
     content = f.read()
     words = tokenize(content)
 
@@ -42,26 +54,22 @@ for word in words:
         print(word, ':', ', '.join(trimlist(likely)),minedit)
 
     # Segmented Approach
-    if isWrong(likely[0]) or minedit > 1:
-        # XXX: minedit > 1
+    if isWrong(likely[0]) or minedit > 0:
+        # XXX: minedit > 0
         # likely[0] is a hack, always wrong words have 1 likely element
-        for w in segment(word, g):
-            if isWrong(w):
-                w = unmarkWrong(w)
-                print(' '*6+'#', end='')
-            likely, minedit = getCorrect(w)
+        seg = segment(word, g)
 
-            print('\t', w, ':', ', '.join(trimlist(likely)),minedit)
+        if len(seg) > 1:
+            sumedit = 0
+            for w in seg:
+                if isWrong(w):
+                    w = unmarkWrong(w)
+                    print(' '*6+'#', end='')
+                likely, minedit = getCorrect(w)
+                sumedit += minedit
+
+                print('\t', w, ':', ', '.join(trimlist(likely)),minedit)
+            print('\t+', sumedit)
     print()
 
 b.endlog()
-
-# TODO
-# Select best between direct and segmented approach (sum of edits*)
-# Can't handle valid-invalid-valid pattern if done so
-
-# XXX: Problems
-# Problem with too much segments बिवापछि , try correction along with segmentation
-# Problem with too few segments, होम
-# Problem with verbs राख्छु
-# Problem with words not in dictionary

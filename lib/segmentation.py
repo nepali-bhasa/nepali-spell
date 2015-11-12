@@ -18,6 +18,7 @@ def segment(word, dictionary):
     if word in dictionary:
         return [word]
 
+    # TODO Put cutoff, get from dictionary model (+2 of longest word)
     #lw: length of word
     lw = len(word)
     # of: offset front, ob: offset back
@@ -109,9 +110,9 @@ def segment(word, dictionary):
                 output = [front, bremain]
             else:
                 if lf >= lb:
-                    output = [front] + segment(bremain)
+                    output = [front] + segment(bremain, dictionary)
                 else:
-                    output = segment(fremain) + [back]
+                    output = segment(fremain, dictionary) + [back]
 
         output = [offsetfront] + output + [offsetback]
         # Used connect here so that smaller groups are connected first
@@ -158,8 +159,3 @@ dependent = {
             '्',
            '‍',
             }
-
-
-# TODO
-# 1. Put cutoff, (a word is not infinitely long),
-# get from dictionary model (+2 of longest word)

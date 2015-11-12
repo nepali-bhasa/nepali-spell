@@ -42,7 +42,7 @@ class Vocabulary(metaclass=ABCMeta):
                 with open(self._wordfile+'+', 'r') as db:
                     dictionarydb |= {x.strip() for x in db.readlines()}
 
-            # TODO: This consumes a lot of memory, try updating shelve itself
+            # FIXME: This consumes a lot of memory, try updating shelve itself
             candidatedb = defaultdict(list)
             for word in dictionarydb:
                 nword = self._normalize(word)
@@ -72,15 +72,6 @@ class Vocabulary(metaclass=ABCMeta):
     def __contains__(self, word):
         # return word+_suffix['correct'] in self._candidatedb
         return self._normalize(word)+_suffix['correct'] in self._candidatedb
-
-        # First find key then find word in list of candidates
-        # NOTE: list will be okay because there are few candidates
-        '''key = self._normalize(word)+_suffix['correct']
-        if key in self._candidatedb:
-            if word in self._candidatedb[key]:
-                return True
-        return False
-        '''
 
     def candidates(self, word):
         nword = self._normalize(word)
