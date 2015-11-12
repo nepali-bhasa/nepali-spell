@@ -10,7 +10,7 @@ with open('tmp/dictionary/ne_NP.dic', 'r') as f:
                 newlst.append(word)
     dictionary = set(newlst)
 
-with open('data/nep/vocabularyD', 'w') as f:
+with open('data/vocabulary-dictionary', 'w') as f:
     for word in sorted(dictionary):
         f.write(word+'\n')
 

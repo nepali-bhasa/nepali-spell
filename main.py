@@ -12,7 +12,8 @@ from lib import *
 
 b = Benchmark()
 b.startlog('load')
-g = VocabularyN('data/nep/vocabularyD', 2)
+# g = VocabularyN('data/vocabulary-corpus', 2)
+g = VocabularyN('data/vocabulary-dictionary', 2)
 b.endlog()
 
 def trimlist(lst, l = 5):
@@ -34,11 +35,11 @@ def getCorrect(word):
 
 
 b.startlog('correction')
-# with open('data/nep/sample-text', 'r') as f:
-# with open('data/nep/sampletextC', 'r') as f:
-# with open('data/nep/sampletextD', 'r') as f:
-# with open('data/nep/sample-segmentation', 'r') as f:
-with open('data/nep/vocabularyC', 'r') as f:
+# with open('data/vocabulary-corpus', 'r') as f:
+# with open('test/sampletext', 'r') as f:
+# with open('test/corpus', 'r') as f:
+# with open('test/dictionary', 'r') as f:
+with open('test/segment', 'r') as f:
     content = f.read()
     words = tokenize(content)
 
