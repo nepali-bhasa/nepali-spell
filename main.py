@@ -12,8 +12,10 @@ from lib import *
 
 b = Benchmark()
 b.startlog('load')
-# g = VocabularyN('data/vocabulary-corpus', 2)
-g = VocabularyN('data/vocabulary-dictionary', 2)
+dictfile = 'data/vocabulary-dictionary'
+p = ShelvePersist(dictfile)
+# p = PicklePersist(dictfile)
+g = VocabularyN(dictfile, p, 2)
 b.endlog()
 
 def trimlist(lst, l = 5):
@@ -35,11 +37,11 @@ def getCorrect(word):
 
 
 b.startlog('correction')
-# with open('data/vocabulary-corpus', 'r') as f:
-# with open('test/sampletext', 'r') as f:
-# with open('test/corpus', 'r') as f:
-# with open('test/dictionary', 'r') as f:
-with open('test/segment', 'r') as f:
+with open('data/vocabulary-corpus', 'r') as f:
+# with open('data/test/sampletext', 'r') as f:
+# with open('data/test/corpus', 'r') as f:
+# with open('data/test/dictionary', 'r') as f:
+# with open('data/test/segment', 'r') as f:
     content = f.read()
     words = tokenize(content)
 

@@ -6,6 +6,46 @@ import shelve
 import os
 from lib.misc import normalize
 
+class PicklePersist():
+    def __init__(self, filename):
+        self.persistfilename = filename + '.pickle'
+
+    def exists(self):
+        return os.path.isfile(self.persistfilename)
+
+    def save(self, candidatedb):
+        with open(self.persistfilename, 'wb') as db:
+            pickle.dump(candidatedb, db)
+
+    def load(self):
+        with open(self.persistfilename, 'rb') as db:
+            self.persistfile = pickle.load(db)
+            return self.persistfile
+
+class ShelvePersist():
+    def __init__(self, filename):
+        self.persistfilename = filename + '.shelve'
+
+    def exists(self):
+        return os.path.isfile(self.persistfilename)
+
+    def save(self, candidatedb):
+        # Write the resulting dictionary in shelve for persistance
+        self.persistfile = shelve.open(self.persistfilename, flag='c',
+                                        protocol=pickle.HIGHEST_PROTOCOL)
+        for (x, y) in candidatedb.items():
+            # if _suffix['correct'] in x and len(y) > 1:
+            #     print(x, y)
+            self.persistfile[x] = y
+        self.persistfile.close()
+
+    def load(self):
+        # Load the dictionary from shelve
+        self.persistfile = shelve.open(self.persistfilename, flag='r',
+                                        protocol=pickle.HIGHEST_PROTOCOL)
+        return self.persistfile
+
+
 # Dictionary of arbitrary string that is unlikely to occur at end of word,
 # used to distinguish type of key (correct, misspelled, prefix, suffix)
 # This helps avoid create another dictionary for correct words
@@ -26,14 +66,14 @@ class Vocabulary(metaclass=ABCMeta):
         return set(values)
 
     # Initialize Vocabulary
-    def __init__(self, wordfile, distance=2):
+    def __init__(self, wordfile, persistfile, distance=2):
         self._distance = distance
         self._wordfile = wordfile
-        self._vocabulary_file = wordfile+'.shelve'
+        self._vocabulary_file = persistfile
         self._init_vocabulary_file()
 
     def _init_vocabulary_file(self):
-        if not os.path.isfile(self._vocabulary_file):
+        if not self._vocabulary_file.exists():
             print("Generating vocabulary_file.")
             with open(self._wordfile, 'r') as db:
                 dictionarydb = {x.strip() for x in db.readlines()}
@@ -41,7 +81,6 @@ class Vocabulary(metaclass=ABCMeta):
             if os.path.isfile(self._wordfile+'+'):
                 with open(self._wordfile+'+', 'r') as db:
                     dictionarydb |= {x.strip() for x in db.readlines()}
-
             # FIXME: This consumes a lot of memory, try updating shelve itself
             candidatedb = defaultdict(list)
             for word in dictionarydb:
@@ -54,19 +93,9 @@ class Vocabulary(metaclass=ABCMeta):
                 for error in self._delete(nword, self._distance)-{nword}:
                     candidatedb[error].append(word)
 
-            # Write the resulting dictionary in shelve for persistance
-            self._candidatedb = shelve.open(self._vocabulary_file, flag='c',
-                                            protocol=pickle.HIGHEST_PROTOCOL)
-            for (x, y) in candidatedb.items():
-                # if _suffix['correct'] in x and len(y) > 1:
-                #     print(x, y)
-                self._candidatedb[x] = y
-            self._candidatedb.close()
+            self._vocabulary_file.save(candidatedb)
 
-        print("Loading vocabulary_file.")
-        # Load the dictionary from shelve
-        self._candidatedb = shelve.open(self._vocabulary_file, flag='r',
-                                        protocol=pickle.HIGHEST_PROTOCOL)
+        self._candidatedb = self._vocabulary_file.load()
 
     # For 'in'
     def __contains__(self, word):
