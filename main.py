@@ -1,14 +1,17 @@
 from lib import *
 
-# TODO
-# Select best between direct and segmented approach (sum of edits*)
-# Merge (segmentation + correction)
+# TODO Generate all words from dictionary
+# TODO Remove all possible unit length words from dictionary
+# TODO Select best between direct and segmented approach (sum of edits*)
+# TODO Find all (new-words, misspelled-words) from corpus
+# TODO Extend the existing dictionary, Create Confusion Matrix
 
-# FIXME
-# Problem with too much segments बिवापछि , try correction along with segmentation
-# Problem with too few segments, होम
-# Problem with verbs राख्छु
-# Problem with words not in dictionary
+# TODO Merge (segmentation + correction), recursive
+
+# FIXME too much segments बिवापछि , try correction along with segmentation
+# FIXME too few segments, होम
+# FIXME verbs राख्छु
+# FIXME words not in dictionary
 
 b = Benchmark()
 b.startlog('load')
@@ -37,18 +40,18 @@ def getCorrect(word):
 
 
 b.startlog('correction')
-with open('data/vocabulary-corpus', 'r') as f:
+# with open('data/vocabulary-corpus', 'r') as f:
 # with open('data/test/sampletext', 'r') as f:
 # with open('data/test/corpus', 'r') as f:
 # with open('data/test/dictionary', 'r') as f:
-# with open('data/test/segment', 'r') as f:
+with open('data/test/segment', 'r') as f:
     content = f.read()
     words = tokenize(content)
 
 for word in words:
 
+    print(word)
     if not valid(word):
-        print(word)
         continue
 
     # Direct Approach

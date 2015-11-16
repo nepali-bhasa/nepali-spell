@@ -1,11 +1,6 @@
 # cython: language_level=3
 import re
 
-# TODO
-# Use regex to match 'ं'
-
-# FIXME
-# Fix tokenizer to split the non-valid words
 
 class Mreplace:
     def __init__(self, mydict):
@@ -78,6 +73,8 @@ _tokenizer = Mreplace(_replacements)
 def tokenize(mystr):
     return _tokenizer.replace(mystr).split()
 
+# FIXME tokenizer to split the non-valid words
+# TODO Use regex to match for 'ं'
 
 # Dictionary of characters that have similar phonics, normalized words
 # will have zero edit distance if they differ in only _phonics
@@ -108,3 +105,27 @@ _normalizer = Mreplace(_phonics)
 # Normalize word (
 def normalize(word):
     return _normalizer.replace(word)
+
+
+_dependent = {
+            'ँ':'',
+            'ं':'',
+            'ः':'',
+            'ा':'',
+            'ि':'',
+            'ी':'',
+            'ु':'',
+            'ू':'',
+            'ृ':'',
+            'े':'',
+            'ै':'',
+            'ो':'',
+            'ौ':'',
+            '्':'',
+           '‍':'',
+            }
+_len = Mreplace(_dependent)
+
+def length(mystr):
+    x = _len.replace(mystr)
+    return (len(x),x)

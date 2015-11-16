@@ -11,7 +11,7 @@ with open('tmp/dictionary/ne_NP.dic', 'r') as f:
     dictionary = set(newlst)
 
 with open('data/vocabulary-dictionary', 'w') as f:
-    for word in sorted(dictionary):
+    for word in sorted(dictionary, key=lambda x: length(x)):
         f.write(word+'\n')
 
 #FIXME: one entry has (fdkaj, fdsakj, kdjsfal) pattern, remove that later

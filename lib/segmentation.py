@@ -1,5 +1,8 @@
 # cython: language_level=3
 
+def _magnitude(x, y):
+    return len(x)**2 + len(y)**2
+
 def isWrong(word):
     return word[-1] == '*'
 
@@ -9,22 +12,20 @@ def markWrong(word):
 def unmarkWrong(word):
     return word[:-1]
 
-def magnitude(x, y):
-    return len(x)**2 + len(y)**2
-
 def segment(word, dictionary):
     if not word:
         return []
     if word in dictionary:
         return [word]
 
-    # TODO Put cutoff, get from dictionary model (+2 of longest word)
     #lw: length of word
     lw = len(word)
     # of: offset front, ob: offset back
     # Requires 'of' and 'ob' because traversal may not be symmetric
     of = 0
     ob = lw-1
+
+    # TODO Put cutoff, get from dictionary model (+2 of longest word)
 
     # Lookup in dictionary is expensive if it is loaded from disk,
     # so, when back='' or front='' it won't change until an offset
@@ -100,7 +101,7 @@ def segment(word, dictionary):
 
             if fremaincorrect and bremaincorrect:
                 # XXX magnitude is arbitrary function
-                if magnitude(front, bremain) < magnitude(fremain, back):
+                if _magnitude(front, bremain) < _magnitude(fremain, back):
                     output = [front , bremain]
                 else:
                     output = [fremain, back]
@@ -115,6 +116,7 @@ def segment(word, dictionary):
                     output = segment(fremain, dictionary) + [back]
 
         output = [offsetfront] + output + [offsetback]
+        # NOTE: connect() is used in each iteration
         # Used connect here so that smaller groups are connected first
         return connect([x for x in output if x])
 

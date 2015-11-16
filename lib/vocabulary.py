@@ -118,10 +118,6 @@ class Vocabulary(metaclass=ABCMeta):
         # if there are no candidates, then return the word itself
         return list(candidates) or [word+'*']
 
-    # TODO handle adding of new words in vocabulary
-    def add(self, word):
-        pass
-
     @abstractmethod
     def _normalize(self, word):
         pass
